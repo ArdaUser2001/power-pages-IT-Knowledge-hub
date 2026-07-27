@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Article - IT Knowledge Hub</title>
+    <link rel="stylesheet" href="../Home/style.css">
+    <style>
+        /* Form styles */
+        .form-container {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--card);
+            color: var(--text);
+            font-size: 15px;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1);
+        }
+        
+        .form-group textarea {
+            min-height: 400px;
+            resize: vertical;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .tags-input-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        
+        .tag-input {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+        }
+        
+        .tag-remove {
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1;
+        }
+        
+        .tag-remove:hover {
+            color: var(--text);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+        
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+        
+        .btn-danger {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .btn-danger:hover {
+            background: #fecaca;
+        }
+        
+        [data-theme="dark"] .btn-danger {
+            background: #7f1d1d;
+            color: #fca5a5;
+            border-color: #ef4444;
+        }
+        
+        [data-theme="dark"] .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #fee2e2;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+        }
+        
+        .success-message {
+            color: #10b981;
+            font-size: 14px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #d1fae5;
+            border-radius: 8px;
+            border: 1px solid #a7f3d0;
+        }
+        
+        [data-theme="dark"] .error-message {
+            background: #7f1d1d;
+            color: #fca5a5;
+            border-color: #ef4444;
+        }
+        
+        [data-theme="dark"] .success-message {
+            background: #064034;
+            color: #6ee7b7;
+            border-color: #10b981;
+        }
+        
+        .markdown-help {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+        
+        .markdown-help h3 {
+            margin: 0 0 16px 0;
+            font-size: 15px;
+            color: var(--text);
+        }
+        
+        .markdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .markdown-item {
+            font-size: 13px;
+        }
+        
+        .markdown-item dt {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        
+        .markdown-item dd {
+            color: var(--muted);
+            margin: 0;
+        }
+        
+        .article-header-info {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .article-header-info h2 {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            color: var(--text);
+        }
+        
+        .info-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 12px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-item-label {
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .info-item-value {
+            color: var(--text);
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+{% assign articleId = request.params.articleId | default: '' %}
+
+{% fetchxml article %}
+<fetch version="1.0">
+   <entity name="cr4b3_kbarticle">
+      <attribute name="cr4b3_kbarticleid" />
+      <attribute name="cr4b3_title" />
+      <attribute name="cr4b3_summary" />
+      <attribute name="cr4b3_body" />
+      <attribute name="cr4b3_viewcount" />
+      <attribute name="cr4b3_status" />
+      <attribute name="cr4b3_tags" />
+      <attribute name="cr4b3_category" />
+      <attribute name="createdon" />
+      <attribute name="modifiedon" />
+      <filter>
+         <condition attribute="cr4b3_kbarticleid" operator="eq" value="{{ articleId }}" />
+      </filter>
+      <link-entity
+         name="cr4b3_kbcategory"
+         from="cr4b3_kbcategoryid"
+         to="cr4b3_category"
+         alias="category">
+         <attribute name="cr4b3_name" />
+      </link-entity>
+      <link-entity
+         name="systemuser"
+         from="systemuserid"
+         to="cr4b3_author"
+         alias="author">
+         <attribute name="fullname" />
+      </link-entity>
+   </entity>
+</fetch>
+{% endfetchxml %}
+
+{% fetchxml categories %}
+<fetch>
+   <entity name="cr4b3_kbcategory">
+      <attribute name="cr4b3_kbcategoryid" />
+      <attribute name="cr4b3_name" />
+      <order attribute="cr4b3_name" />
+   </entity>
+</fetch>
+{% endfetchxml %}
+
+{% if article.results.entities.size > 0 %}
+{% assign article = article.results.entities[0] %}
+
+<div class="kb-layout">
+   <!-- Sidebar -->
+   <aside class="kb-sidebar">
+      <div class="kb-logo">
+         <h2>💡 IT Knowledge Hub</h2>
+      </div>
+      <nav class="kb-nav">
+         <a href="/" class="{% if request.path == '/' %}active{% endif %}">📊 Dashboard</a>
+         <a href="/articles" class="{% if request.path contains '/articles' %}active{% endif %}">📚 Articles</a>
+         <a href="my-articles" class="{% if request.path contains '/my-articles' %}active{% endif %}">✍️ My Articles</a>
+         <a href="new-article" class="{% if request.path contains '/new-article' %}active{% endif %}">➕ New Article</a>
+      </nav>
+      <div class="kb-sidebar-footer">
+         <button id="themeToggle" class="theme-toggle-sidebar" aria-label="Toggle Dark Mode">
+            <span class="theme-icon">🌙</span>
+            <span class="theme-text">Dark Mode</span>
+         </button>
+      </div>
+   </aside>
+
+   <!-- Main Content -->
+   <main class="kb-content">
+      <!-- Header -->
+      <div class="kb-title">
+         <h1>Edit Article</h1>
+         <p>Update your knowledge base article.</p>
+      </div>
+
+      <!-- Article Info -->
+      <div class="article-header-info">
+         <h2>📄 {{ article.cr4b3_title }}</h2>
+         <div class="info-row">
+            <div class="info-item">
+               <span class="info-item-label">Category:</span>
+               <span class="info-item-value">{{ article['category.cr4b3_name'] | default: 'Other' }}</span>
+            </div>
+            <div class="info-item">
+               <span class="info-item-label">Status:</span>
+               <span class="info-item-value">
+                  {{ article.cr4b3_status | replace: '100000000', 'Draft' | replace: '100000001', 'Published' | replace: '100000002', 'Needs Review' | default: 'Draft' }}
+               </span>
+            </div>
+            <div class="info-item">
+               <span class="info-item-label">Views:</span>
+               <span class="info-item-value">👁️ {{ article.cr4b3_viewcount | default: 0 }}</span>
+            </div>
+            <div class="info-item">
+               <span class="info-item-label">Created:</span>
+               <span class="info-item-value">📅 {{ article.createdon | date: '%Y-%m-%d' }}</span>
+            </div>
+            <div class="info-item">
+               <span class="info-item-label">Updated:</span>
+               <span class="info-item-value">📅 {{ article.modifiedon | date: '%Y-%m-%d' }}</span>
+            </div>
+         </div>
+      </div>
+
+      <!-- Form -->
+      <form id="articleForm" class="form-container">
+         <input type="hidden" name="articleId" value="{{ article.cr4b3_kbarticleid }}">
+         <div id="formMessages"></div>
+         
+         <div class="form-group">
+            <label for="title">Title *</label>
+            <input type="text" id="title" name="title" required value="{{ article.cr4b3_title | default: '' }}">
+         </div>
+         
+         <div class="form-row">
+            <div class="form-group">
+               <label for="category">Category *</label>
+               <select id="category" name="category" required>
+                  <option value="">Select a category...</option>
+                  {% for category in categories.results.entities %}
+                  <option value="{{ category.cr4b3_kbcategoryid }}" {% if category.cr4b3_kbcategoryid == article.cr4b3_category %}selected{% endif %}>
+                     {{ category.cr4b3_name }}
+                  </option>
+                  {% endfor %}
+               </select>
+            </div>
+            
+            <div class="form-group">
+               <label for="status">Status</label>
+               <select id="status" name="status">
+                  <option value="100000000" {% if article.cr4b3_status == '100000000' %}selected{% endif %}>Draft</option>
+                  <option value="100000001" {% if article.cr4b3_status == '100000001' %}selected{% endif %}>Published</option>
+                  <option value="100000002" {% if article.cr4b3_status == '100000002' %}selected{% endif %}>Needs Review</option>
+               </select>
+            </div>
+         </div>
+         
+         <div class="form-group">
+            <label for="summary">Summary</label>
+            <textarea id="summary" name="summary" rows="3" placeholder="Brief summary of the article... (optional)">{{ article.cr4b3_summary | default: '' }}</textarea>
+         </div>
+         
+         <div class="form-group">
+            <label for="tags">Tags</label>
+            <div class="tags-input-container" id="tagsContainer">
+               <input type="text" id="tagInput" placeholder="Add a tag and press Enter..." class="tag-input">
+            </div>
+            <input type="hidden" id="tags" name="tags" value="">
+         </div>
+         
+         <div class="form-group">
+            <label for="body">Content *</label>
+            <textarea id="body" name="body" required>{{ article.cr4b3_body | default: '' }}</textarea>
+         </div>
+         
+         <div class="markdown-help">
+            <h3>Markdown Formatting Help</h3>
+            <dl class="markdown-grid">
+               <div class="markdown-item">
+                  <dt>Headings</dt>
+                  <dd># H1, ## H2, ### H3</dd>
+               </div>
+               <div class="markdown-item">
+                  <dt>Text</dt>
+                  <dd>**bold**, *italic*, ~~strikethrough~~</dd>
+               </div>
+               <div class="markdown-item">
+                  <dt>Lists</dt>
+                  <dd>- item, 1. numbered</dd>
+               </div>
+               <div class="markdown-item">
+                  <dt>Code</dt>
+                  <dd>`code`, ```block```</dd>
+               </div>
+               <div class="markdown-item">
+                  <dt>Links</dt>
+                  <dd>[text](url)</dd>
+               </div>
+               <div class="markdown-item">
+                  <dt>Images</dt>
+                  <dd>![alt](url)</dd>
+               </div>
+            </dl>
+         </div>
+         
+         <div class="form-actions">
+            <button type="submit" class="kb-btn">💾 Save Changes</button>
+            <a href="/article?articleId={{ article.cr4b3_kbarticleid }}" class="kb-btn btn-secondary">Cancel</a>
+            <button type="button" onclick="confirmDelete('{{ article.cr4b3_kbarticleid }}')" class="kb-btn btn-danger">🗑️ Delete</button>
+         </div>
+      </form>
+   </main>
+</div>
+
+<script>
+// Tags management
+const tagsContainer = document.getElementById('tagsContainer');
+const tagInput = document.getElementById('tagInput');
+const tagsHidden = document.getElementById('tags');
+
+// Parse existing tags
+const existingTags = '{{ article.cr4b3_tags | default: "" }}';
+let tags = existingTags ? existingTags.split(',').map(t => t.trim().toLowerCase()).filter(t => t) : [];
+
+function updateTagsHidden() {
+    tagsHidden.value = tags.join(',');
+}
+
+function addTag(tag) {
+    tag = tag.trim().toLowerCase();
+    if (tag && !tags.includes(tag)) {
+        tags.push(tag);
+        renderTags();
+        updateTagsHidden();
+    }
+}
+
+function removeTag(index) {
+    tags.splice(index, 1);
+    renderTags();
+    updateTagsHidden();
+}
+
+function renderTags() {
+    // Clear existing tags (except input)
+    const inputs = tagsContainer.querySelectorAll('input');
+    const children = Array.from(tagsContainer.children);
+    children.forEach(child => {
+        if (!child.querySelector('input') && child !== inputs[0]) {
+            tagsContainer.removeChild(child);
+        }
+    });
+    
+    // Add tag badges
+    tags.forEach((tag, index) => {
+        const tagElement = document.createElement('span');
+        tagElement.className = 'tag-item';
+        tagElement.innerHTML = `
+            ${tag}
+            <span class="tag-remove" onclick="removeTag(${index})">×</span>
+        `;
+        tagsContainer.insertBefore(tagElement, tagInput);
+    });
+}
+
+// Initial render
+renderTags();
+
+// Handle tag input
+tagInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        addTag(tagInput.value);
+        tagInput.value = '';
+    }
+});
+
+// Form submission
+document.getElementById('articleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Validate
+    if (!data.title || !data.title.trim()) {
+        showMessage('Title is required', 'error');
+        return;
+    }
+    
+    if (!data.category) {
+        showMessage('Category is required', 'error');
+        return;
+    }
+    
+    if (!data.body || !data.body.trim()) {
+        showMessage('Content is required', 'error');
+        return;
+    }
+    
+    // Show saving state
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    
+    // In Power Pages, we would use Web API to update the article
+    // For now, we'll simulate and redirect
+    showMessage('Article updated successfully! Redirecting...', 'success');
+    
+    setTimeout(function() {
+        window.location.href = '/article?articleId=' + data.articleId;
+    }, 1500);
+});
+
+function confirmDelete(articleId) {
+    if (confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
+        // In Power Pages, we would use Web API to delete
+        window.location.href = '/my-articles?deleted=' + articleId;
+    }
+}
+
+function showMessage(message, type) {
+    const container = document.getElementById('formMessages');
+    container.innerHTML = `<div class="${type}-message">${message}</div>`;
+    
+    // Clear after 5 seconds
+    setTimeout(function() {
+        container.innerHTML = '';
+    }, 5000);
+}
+</script>
+
+{% else %}
+<div class="kb-layout">
+   <aside class="kb-sidebar">
+      <div class="kb-logo">
+         <h2>💡 IT Knowledge Hub</h2>
+      </div>
+      <nav class="kb-nav">
+         <a href="/">📊 Dashboard</a>
+         <a href="/articles">📚 Articles</a>
+      </nav>
+   </aside>
+   <main class="kb-content">
+      <div class="article-card empty-state">
+         <div class="empty-icon">❌</div>
+         <h3>Article Not Found</h3>
+         <p>The article you're trying to edit doesn't exist or has been deleted.</p>
+         <a href="/my-articles" class="kb-btn">← Back to My Articles</a>
+      </div>
+   </main>
+</div>
+{% endif %}
+</body>
+</html>

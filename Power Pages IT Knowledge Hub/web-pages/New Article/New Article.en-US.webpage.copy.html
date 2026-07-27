@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Article - IT Knowledge Hub</title>
+    <link rel="stylesheet" href="../Home/style.css">
+    <style>
+        /* Form styles */
+        .form-container {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--card);
+            color: var(--text);
+            font-size: 15px;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1);
+        }
+        
+        .form-group textarea {
+            min-height: 400px;
+            resize: vertical;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .tags-input-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        
+        .tag-input {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .tag-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+        }
+        
+        .tag-remove {
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1;
+        }
+        
+        .tag-remove:hover {
+            color: var(--text);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+        
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #fee2e2;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+        }
+        
+        .success-message {
+            color: #10b981;
+            font-size: 14px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #d1fae5;
+            border-radius: 8px;
+            border: 1px solid #a7f3d0;
+        }
+        
+        [data-theme="dark"] .error-message {
+            background: #7f1d1d;
+            color: #fca5a5;
+            border-color: #ef4444;
+        }
+        
+        [data-theme="dark"] .success-message {
+            background: #064034;
+            color: #6ee7b7;
+            border-color: #10b981;
+        }
+        
+        .markdown-help {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+        
+        .markdown-help h3 {
+            margin: 0 0 16px 0;
+            font-size: 15px;
+            color: var(--text);
+        }
+        
+        .markdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .markdown-item {
+            font-size: 13px;
+        }
+        
+        .markdown-item dt {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        
+        .markdown-item dd {
+            color: var(--muted);
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+{% fetchxml categories %}
+<fetch>
+   <entity name="cr4b3_kbcategory">
+      <attribute name="cr4b3_kbcategoryid" />
+      <attribute name="cr4b3_name" />
+      <order attribute="cr4b3_name" />
+   </entity>
+</fetch>
+{% endfetchxml %}
+
+<div class="kb-layout">
+   <!-- Sidebar -->
+   <aside class="kb-sidebar">
+      <div class="kb-logo">
+         <h2>💡 IT Knowledge Hub</h2>
+      </div>
+      <nav class="kb-nav">
+         <a href="/" class="{% if request.path == '/' %}active{% endif %}">📊 Dashboard</a>
+         <a href="/articles" class="{% if request.path contains '/articles' %}active{% endif %}">📚 Articles</a>
+         <a href="my-articles" class="{% if request.path contains '/my-articles' %}active{% endif %}">✍️ My Articles</a>
+         <a href="new-article" class="{% if request.path contains '/new-article' %}active{% endif %}">➕ New Article</a>
+      </nav>
+      <div class="kb-sidebar-footer">
+         <button id="themeToggle" class="theme-toggle-sidebar" aria-label="Toggle Dark Mode">
+            <span class="theme-icon">🌙</span>
+            <span class="theme-text">Dark Mode</span>
+         </button>
+      </div>
+   </aside>
+
+   <!-- Main Content -->
+   <main class="kb-content">
+      <!-- Header -->
+      <div class="kb-title">
+         <h1>Create New Article</h1>
+         <p>Add a new knowledge base article for the IT team.</p>
+      </div>
+
+      <!-- Form -->
+      <form id="articleForm" class="form-container">
+         <div id="formMessages"></div>
+         
+         <div class="form-group">
+            <label for="title">Title *</label>
+            <input type="text" id="title" name="title" required placeholder="Enter article title...">
+         </div>
+         
+         <div class="form-row">
+            <div class="form-group">
+               <label for="category">Category *</label>
+               <select id="category" name="category" required>
+                  <option value="">Select a category...</option>
+                  {% for category in categories.results.entities %}
+                  <option value="{{ category.cr4b3_kbcategoryid }}">{{ category.cr4b3_name }}</option>
+                  {% endfor %}
+               </select>
+            </div>
+            
+            <div class="form-group">
+               <label for="status">Status</label>
+               <select id="status" name="status">
+                  <option value="100000000">Draft</option>
+                  <option value="100000001">Published</option>
+                  <option value="100000002">Needs Review</option>
+               </select>
+            </div>
+         </div>
+         
+         <div class="form-group">
+            <label for="summary">Summary</label>
+            <textarea id="summary" name="summary" rows="3" placeholder="Brief summary of the article... (optional)"></textarea>
+         </div>
+         
+         <div class="form-group">
+            <label for="tags">Tags</label>
+            <div class="tags-input-container" id="tagsContainer">
+               <input type="text" id="tagInput" placeholder="Add a tag and press Enter..." class="tag-input">
+            </div>
+            <input type="hidden" id="tags" name="tags" value="">
+         </div>
+         
+         <div class="form-group">
+            <label for="body">Content *</label>
+            <textarea id="body" name="body" required placeholder="Write your article content here...\n\nUse Markdown formatting:\n- # Heading 1\n- ## Heading 2\n- **bold**\n- *italic*\n- - List item\n- [Link](url)\n- `code`\n- ```code block```"></textarea>
+         </div>
+         
+         <div class="markdown-help">
+            <h3>Markdown Formatting Help</h3>
+            <dl class="markdown-grid">
+               <div class="markdown-item">
+                  <dt>Headings</dt>
+                  <dd># H1, ## H2, ### H3</dd>
+               </div>
+               <div class="markdown-item">
+                  <dt>Text</dt>
+                  <dd>**bold**, *italic*, ~~strikethrough~~</dd>
+               </div>
+               <div class="markdown-item">
+                  <dt>Lists</dt>
+                  <dd>- item, 1. numbered</dd>
+               </div>
+               <div class="markdown-item">
+                  <dt>Code</dt>
+                  <dd>`code`, ```block```</dd>
+               </div>
+               <div class="markdown-item">
+                  <dt>Links</dt>
+                  <dd>[text](url)</dd>
+               </div>
+               <div class="markdown-item">
+                  <dt>Images</dt>
+                  <dd>![alt](url)</dd>
+               </div>
+            </dl>
+         </div>
+         
+         <div class="form-actions">
+            <button type="submit" class="kb-btn">💾 Save Article</button>
+            <a href="/my-articles" class="kb-btn btn-secondary">Cancel</a>
+         </div>
+      </form>
+   </main>
+</div>
+
+<script>
+// Tags management
+const tagsContainer = document.getElementById('tagsContainer');
+const tagInput = document.getElementById('tagInput');
+const tagsHidden = document.getElementById('tags');
+let tags = [];
+
+function updateTagsHidden() {
+    tagsHidden.value = tags.join(',');
+}
+
+function addTag(tag) {
+    tag = tag.trim().toLowerCase();
+    if (tag && !tags.includes(tag)) {
+        tags.push(tag);
+        renderTags();
+        updateTagsHidden();
+    }
+}
+
+function removeTag(index) {
+    tags.splice(index, 1);
+    renderTags();
+    updateTagsHidden();
+}
+
+function renderTags() {
+    // Clear existing tags (except input)
+    const inputs = tagsContainer.querySelectorAll('input');
+    const children = Array.from(tagsContainer.children);
+    children.forEach(child => {
+        if (!child.querySelector('input') && child !== inputs[0]) {
+            tagsContainer.removeChild(child);
+        }
+    });
+    
+    // Add tag badges
+    tags.forEach((tag, index) => {
+        const tagElement = document.createElement('span');
+        tagElement.className = 'tag-item';
+        tagElement.innerHTML = `
+            ${tag}
+            <span class="tag-remove" onclick="removeTag(${index})">×</span>
+        `;
+        tagsContainer.insertBefore(tagElement, tagInput);
+    });
+}
+
+// Handle tag input
+tagInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        addTag(tagInput.value);
+        tagInput.value = '';
+    }
+});
+
+// Form submission
+document.getElementById('articleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Validate
+    if (!data.title || !data.title.trim()) {
+        showMessage('Title is required', 'error');
+        return;
+    }
+    
+    if (!data.category) {
+        showMessage('Category is required', 'error');
+        return;
+    }
+    
+    if (!data.body || !data.body.trim()) {
+        showMessage('Content is required', 'error');
+        return;
+    }
+    
+    // Show saving state
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    
+    // In Power Pages, we would use Web API to create the article
+    // For now, we'll simulate and redirect
+    showMessage('Article saved successfully! Redirecting...', 'success');
+    
+    setTimeout(function() {
+        window.location.href = '/my-articles';
+    }, 1500);
+});
+
+function showMessage(message, type) {
+    const container = document.getElementById('formMessages');
+    container.innerHTML = `<div class="${type}-message">${message}</div>`;
+    
+    // Clear after 5 seconds
+    setTimeout(function() {
+        container.innerHTML = '';
+    }, 5000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+/* My Articles Page Specific Styles */
+
+.action-btn.publish {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.action-btn.publish:hover {
+    background: #a7f3d0;
+}
+
+[data-theme="dark"] .action-btn.publish {
+    background: #064034;
+    color: #6ee7b7;
+    border-color: #10b981;
+}
+
+[data-theme="dark"] .action-btn.publish:hover {
+    background: #10b981;
+}

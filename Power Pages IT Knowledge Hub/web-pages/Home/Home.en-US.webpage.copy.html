@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Knowledge Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+{% assign sortBy = request.params.sort | default: 'recent' %}
+{% assign currentPage = request.params.page | default: 1 %}
+{% assign itemsPerPage = 12 %}
+{% assign searchQuery = request.params.q | default: '' %}
+{% assign selectedCategory = request.params.category | default: '' %}
+
+{% fetchxml articles %}
+<fetch version="1.0" mapping="logical" count="{{ itemsPerPage }}" page="{{ currentPage }}">
+   <entity name="cr4b3_kbarticle">
+      <attribute name="cr4b3_kbarticleid" />
+      <attribute name="cr4b3_title" />
+      <attribute name="cr4b3_summary" />
+      <attribute name="cr4b3_body" />
+      <attribute name="cr4b3_viewcount" />
+      <attribute name="cr4b3_status" />
+      <attribute name="createdon" />
+      <attribute name="modifiedon" />
+      <filter>
+         <condition attribute="cr4b3_published" operator="eq" value="1" />
+         {% if searchQuery != '' %}
+         <condition attribute="cr4b3_title" operator="like" value="%{{ searchQuery }}%" />
+         {% endif %}
+         {% if selectedCategory != '' %}
+         <condition attribute="cr4b3_category" operator="eq" value="{{ selectedCategory }}" />
+         {% endif %}
+      </filter>
+      <link-entity
+         name="cr4b3_kbcategory"
+         from="cr4b3_kbcategoryid"
+         to="cr4b3_category"
+         alias="category">
+         <attribute name="cr4b3_name" />
+      </link-entity>
+      <link-entity
+         name="systemuser"
+         from="systemuserid"
+         to="cr4b3_author"
+         alias="author">
+         <attribute name="fullname" />
+      </link-entity>
+      {% if sortBy == 'views' %}
+      <order attribute="cr4b3_viewcount" descending="true" />
+      {% elsif sortBy == 'title' %}
+      <order attribute="cr4b3_title" />
+      {% else %}
+      <order attribute="modifiedon" descending="true" />
+      {% endif %}
+   </entity>
+</fetch>
+{% endfetchxml %}
+
+{% fetchxml categories %}
+<fetch>
+   <entity name="cr4b3_kbcategory">
+      <attribute name="cr4b3_kbcategoryid" />
+      <attribute name="cr4b3_name" />
+      <order attribute="cr4b3_name" />
+   </entity>
+</fetch>
+{% endfetchxml %}
+
+{% fetchxml stats %}
+<fetch aggregate="true">
+   <entity name="cr4b3_kbarticle">
+      <attribute name="cr4b3_kbarticleid" alias="total_articles" aggregate="count" />
+      <filter>
+         <condition attribute="cr4b3_published" operator="eq" value="1" />
+      </filter>
+   </entity>
+</fetch>
+{% endfetchxml %}
+
+<div class="kb-layout">
+   <!-- Sidebar -->
+   <aside class="kb-sidebar">
+      <div class="kb-logo">
+         <h2>💡 IT Knowledge Hub</h2>
+      </div>
+      <nav class="kb-nav">
+         <a href="/" class="{% if request.path == '/' %}active{% endif %}">📊 Dashboard</a>
+         <a href="/articles" class="{% if request.path contains '/articles' %}active{% endif %}">📚 Articles</a>
+         {% if user.role == 'System Administrator' or user.role == 'System Customizer' %}
+         <a href="my-articles" class="{% if request.path contains '/my-articles' %}active{% endif %}">✍️ My Articles</a>
+         <a href="new-article" class="{% if request.path contains '/new-article' %}active{% endif %}">➕ New Article</a>
+         {% endif %}
+      </nav>
+      <div class="kb-sidebar-footer">
+         <button id="themeToggle" class="theme-toggle-sidebar" aria-label="Toggle Dark Mode">
+            <span class="theme-icon">🌙</span>
+            <span class="theme-text">Dark Mode</span>
+         </button>
+      </div>
+   </aside>
+
+   <!-- Main Content -->
+   <main class="kb-content">
+      <!-- Header with Stats -->
+      <div class="kb-header">
+         <div class="kb-title">
+            <h1>IT Knowledge Base</h1>
+            <p>Find guides, troubleshooting articles, and internal documentation.</p>
+         </div>
+         <div class="kb-stats">
+            <div class="stat-item">
+               <span class="stat-value">{{ stats.results.entities[0].total_articles | default: 0 }}</span>
+               <span class="stat-label">Articles</span>
+            </div>
+            <div class="stat-item">
+               <span class="stat-value">{{ categories.results.entities.size | default: 0 }}</span>
+               <span class="stat-label">Categories</span>
+            </div>
+         </div>
+      </div>
+
+      <!-- Search and Filter Bar -->
+      <form method="get" class="search-bar">
+         <input
+            type="search"
+            name="q"
+            placeholder="Search articles, guides, troubleshooting..."
+            value="{{ request.params.q | default: '' }}" />
+         <select name="sort">
+            <option value="recent" {% if sortBy == 'recent' %}selected{% endif %}>Most Recent</option>
+            <option value="views" {% if sortBy == 'views' %}selected{% endif %}>Most Viewed</option>
+            <option value="title" {% if sortBy == 'title' %}selected{% endif %}>Title (A-Z)</option>
+         </select>
+         <button type="submit" class="kb-btn">🔍 Search</button>
+      </form>
+
+      <!-- Categories Filter -->
+      <div class="filter-row">
+         <a href="/?sort={{ sortBy }}&q={{ searchQuery }}" class="filter-pill {% if selectedCategory == '' %}active{% endif %}">All</a>
+         {% for category in categories.results.entities %}
+         <a href="/?category={{ category.cr4b3_kbcategoryid }}&sort={{ sortBy }}&q={{ searchQuery }}" 
+            class="filter-pill {% if selectedCategory == category.cr4b3_kbcategoryid %}active{% endif %}">
+            {{ category.cr4b3_name }}
+         </a>
+         {% endfor %}
+      </div>
+
+      <!-- Articles Grid -->
+      <section class="article-grid">
+         {% if articles.results.entities.size > 0 %}
+         {% for article in articles.results.entities %}
+         <article class="article-card">
+            <div class="article-meta">
+               <span class="article-category">{{ article['category.cr4b3_name'] | default: 'Other' }}</span>
+               <span class="article-status status-{{ article.cr4b3_status | default: 'draft' }}">
+                  {{ article.cr4b3_status | default: 'Draft' }}
+               </span>
+            </div>
+            <h3><a href="/article?articleId={{ article.cr4b3_kbarticleid }}">{{ article.cr4b3_title }}</a></h3>
+            <p>{{ article.cr4b3_summary | truncate: 140 | default: '' }}</p>
+            <div class="article-footer">
+               <span class="article-author">👤 {{ article['author.fullname'] | default: 'Unknown' }}</span>
+               <span class="article-views">👁️ {{ article.cr4b3_viewcount | default: 0 }}</span>
+               <span class="article-date">📅 {{ article.modifiedon | date: '%Y-%m-%d' | default: article.createdon | date: '%Y-%m-%d' }}</span>
+            </div>
+            <a href="/article?articleId={{ article.cr4b3_kbarticleid }}" class="read-link">Read More →</a>
+         </article>
+         {% endfor %}
+         {% else %}
+         <article class="article-card empty-state">
+            <div class="empty-icon">📄</div>
+            <h3>No Articles Found</h3>
+            <p>No published articles match your search criteria.</p>
+            {% if user.role == 'System Administrator' or user.role == 'System Customizer' %}
+            <a href="new-article" class="kb-btn">➕ Create First Article</a>
+            {% endif %}
+         </article>
+         {% endif %}
+      </section>
+
+      <!-- Pagination -->
+      {% assign totalArticles = articles.results.total_record_count %}
+      {% assign totalPages = totalArticles | divided_by: itemsPerPage | ceil %}
+
+      {% if totalPages > 1 %}
+      <div class="pagination-container">
+         {% if currentPage > 1 %}
+         <a href="?page={{ currentPage | minus: 1 }}&sort={{ sortBy }}&q={{ searchQuery }}&category={{ selectedCategory }}" 
+            class="pagination-item pagination-prev">«</a>
+         {% else %}
+         <span class="pagination-item pagination-prev disabled">«</span>
+         {% endif %}
+
+         {% for page in (1..totalPages) %}
+            {% if page == currentPage %}
+               <a href="?page={{ page }}&sort={{ sortBy }}&q={{ searchQuery }}&category={{ selectedCategory }}" 
+                  class="pagination-item active">{{ page }}</a>
+            {% else %}
+               <a href="?page={{ page }}&sort={{ sortBy }}&q={{ searchQuery }}&category={{ selectedCategory }}" 
+                  class="pagination-item">{{ page }}</a>
+            {% endif %}
+         {% endfor %}
+
+         {% if currentPage < totalPages %}
+         <a href="?page={{ currentPage | plus: 1 }}&sort={{ sortBy }}&q={{ searchQuery }}&category={{ selectedCategory }}" 
+            class="pagination-item pagination-next">»</a>
+         {% else %}
+         <span class="pagination-item pagination-next disabled">»</span>
+         {% endif %}
+      </div>
+      {% endif %}
+   </main>
+</div>
+</body>
+</html>
