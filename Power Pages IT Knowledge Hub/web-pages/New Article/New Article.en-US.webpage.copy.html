@@ -12,7 +12,7 @@
   <main class="kb-content" id="mainContent">
     {% if isAdmin %}
     <header class="kb-header"><div class="kb-title"><span class="kb-eyebrow">EDITOR</span><h1>Create article</h1><p>Capture a reusable solution for the WFW IT team.</p></div></header>
-    <form id="articleForm" class="kb-form" novalidate>
+    <form id="articleForm" class="kb-form" data-author="{{ user.fullname | default: 'WFW IT' | escape }}" novalidate>
       <div id="formMessages"></div>
       <div class="kb-field"><label for="title">Title <span aria-hidden="true">*</span></label><input id="title" name="title" type="text" maxlength="200" required autocomplete="off" placeholder="e.g. Reconnect Outlook after a password change"></div>
       <div class="kb-form-grid">
@@ -47,7 +47,7 @@ document.getElementById("articleForm").addEventListener("submit", function (even
         cr4b3_body: document.getElementById("body").value.trim(),
         cr4b3_status: status,
         cr4b3_published: status === 100000001,
-        cr4b3_authorname: {{ user.fullname | default: 'WFW IT' | json }},
+        cr4b3_authorname: form.dataset.author || "WFW IT",
         cr4b3_viewcount: 0,
         "cr4b3_Category@odata.bind": "/cr4b3_kbcategories(" + document.getElementById("category").value + ")"
     };
@@ -55,9 +55,10 @@ document.getElementById("articleForm").addEventListener("submit", function (even
     WFWKnowledgeHub.setBusy(button, true, "Saving…");
     WFWKnowledgeHub.api({ url: "/_api/cr4b3_kbarticles", method: "POST", body: payload })
       .then(function (result) {
-          var entityId = result.response.headers.get("entityid");
+          var entityHeader = result.response.headers.get("entityid") || result.response.headers.get("odata-entityid") || "";
+          var entityMatch = entityHeader.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
           WFWKnowledgeHub.showMessage(messages, "Article saved.", "success");
-          window.location.assign(entityId ? "/article?articleId=" + entityId.replace(/[{}]/g, "") : "/my-articles");
+          window.location.assign(entityMatch ? "/article?articleId=" + entityMatch[0] : "/my-articles");
       })
       .catch(function (error) {
           WFWKnowledgeHub.showMessage(messages, "The article could not be saved. " + error.message, "error");
@@ -66,4 +67,3 @@ document.getElementById("articleForm").addEventListener("submit", function (even
 });
 </script>
 {% endif %}
-<script src="/kb.js"></script>

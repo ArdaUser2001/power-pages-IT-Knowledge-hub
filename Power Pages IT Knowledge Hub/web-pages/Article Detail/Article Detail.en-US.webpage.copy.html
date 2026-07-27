@@ -41,10 +41,9 @@
 {% if item %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-  WFWKnowledgeHub.incrementView({{ item.cr4b3_kbarticleid | json }});
+  WFWKnowledgeHub.incrementView("{{ item.cr4b3_kbarticleid | escape }}");
   var button = document.getElementById("deleteButton");
-  if (button) button.addEventListener("click", function () { WFWKnowledgeHub.deleteArticle({{ item.cr4b3_kbarticleid | json }}, "/articles"); });
+  if (button) button.addEventListener("click", function () { WFWKnowledgeHub.deleteArticle("{{ item.cr4b3_kbarticleid | escape }}", "/articles"); });
 });
 </script>
 {% endif %}
-<script src="/kb.js"></script>

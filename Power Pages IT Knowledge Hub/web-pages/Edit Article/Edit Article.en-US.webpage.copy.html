@@ -16,7 +16,7 @@
   <main class="kb-content" id="mainContent">
     {% if isAdmin and item %}
     <header class="kb-header"><div class="kb-title"><span class="kb-eyebrow">EDITOR</span><h1>Edit article</h1><p>Update the guide and its publishing status.</p></div></header>
-    <form id="articleForm" class="kb-form" novalidate>
+    <form id="articleForm" class="kb-form" data-article-id="{{ articleId | escape }}" novalidate>
       <div id="formMessages"></div>
       <div class="kb-field"><label for="title">Title *</label><input id="title" type="text" maxlength="200" required value="{{ item.cr4b3_title | escape }}"></div>
       <div class="kb-form-grid">
@@ -51,11 +51,13 @@ document.getElementById("articleForm").addEventListener("submit", function (even
         "cr4b3_Category@odata.bind": "/cr4b3_kbcategories(" + document.getElementById("category").value + ")"
     };
     WFWKnowledgeHub.setBusy(button, true, "Saving…");
-    WFWKnowledgeHub.api({ url: WFWKnowledgeHub.articleUrl({{ articleId | json }}), method: "PATCH", body: payload })
+    var articleId = form.dataset.articleId;
+    WFWKnowledgeHub.api({ url: WFWKnowledgeHub.articleUrl(articleId), method: "PATCH", body: payload })
       .then(function () { window.location.assign("/article?articleId={{ articleId | url_escape }}"); })
       .catch(function (error) { WFWKnowledgeHub.showMessage(messages, "Changes could not be saved. " + error.message, "error"); WFWKnowledgeHub.setBusy(button, false); });
 });
-document.getElementById("deleteButton").addEventListener("click", function () { WFWKnowledgeHub.deleteArticle({{ articleId | json }}, "/articles"); });
+document.getElementById("deleteButton").addEventListener("click", function () {
+    WFWKnowledgeHub.deleteArticle(document.getElementById("articleForm").dataset.articleId, "/articles");
+});
 </script>
 {% endif %}
-<script src="/kb.js"></script>

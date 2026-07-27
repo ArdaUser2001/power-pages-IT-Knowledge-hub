@@ -1,1 +1,1 @@
-/* Shared behaviour is loaded from the /kb.js web file. */
+/* Shared behaviour is embedded in the existing Header web template. */
