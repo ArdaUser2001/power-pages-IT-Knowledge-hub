@@ -138,20 +138,19 @@ Paste it into the site's `style.css` web file. Set:
 - MIME type: `text/css`
 - Publishing state: Published
 
-### 2. Shared JavaScript
+### 2. Shared JavaScript (proxy-safe; no new web file)
 
-Create a JavaScript web file and copy the complete contents of:
+The Knowledge Hub JavaScript is embedded at the bottom of the existing:
 
-`Power Pages IT Knowledge Hub/web-files/kb.js`
+`Power Pages IT Knowledge Hub/web-templates/Header.html`
 
-Set:
+Open the existing **Header** web template in `vscode.dev`. Copy the block beginning with:
 
-- Name: `kb.js`
-- Partial URL: `kb.js`
-- MIME type: `application/javascript`
-- Publishing state: Published
+`<!-- WFW IT Knowledge Hub shared behaviour.`
 
-Every supplied page loads it from `/kb.js`.
+and ending at its following `</script>` into the bottom of the firm's existing Header template. Press `Ctrl+S`, return to Power Pages Design Studio, and select **Sync**.
+
+Do not create `kb.js`. This structure deliberately uses an existing Power Pages metadata record because Visual Studio Code for the Web cannot persist newly created web-file records, and some WFW proxy configurations block the management page used to create them.
 
 ### 3. Pages
 
@@ -174,9 +173,9 @@ For each page above, copy the matching `.customcss.css` file into that page's **
 
 Most shared styling is intentionally in `web-files/style.css`; this keeps the WFW appearance consistent and makes future updates easier to copy.
 
-### 5. Optional shell files
+### 5. Other optional shell files
 
-Only copy `web-templates/Header.html`, `web-templates/Footer.html`, or files under `content-snippets/` if you intend to replace the WFW site's existing header/footer. The knowledge hub pages do not require that replacement. Keeping the firm's existing authentication header is usually preferable.
+Do not replace the firm's whole Header template merely to install the Knowledge Hub. Append only the marked Knowledge Hub JavaScript block described in step 2. Copy `web-templates/Footer.html` or files under `content-snippets/` only if you intentionally want to replace those existing WFW components.
 
 ## Power Pages page settings
 
@@ -202,7 +201,7 @@ Only copy `web-templates/Header.html`, `web-templates/Footer.html`, or files und
 ```text
 Power Pages IT Knowledge Hub/
 ├── content-snippets/       Power Pages content snippets
-├── web-files/              Global CSS, JavaScript, and image assets
+├── web-files/              Global CSS and image assets
 ├── web-pages/              One folder per Power Pages page
 └── web-templates/          Existing Power Pages Liquid templates
 ```
