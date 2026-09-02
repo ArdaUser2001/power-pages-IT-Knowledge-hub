@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Service Desk Message Generator</title>
+  <style>
+    :root {
+      --navy: #172b4d;
+      --blue: #2f6fed;
+      --blue-dark: #2058c7;
+      --blue-soft: #edf4ff;
+      --ink: #182230;
+      --muted: #667085;
+      --line: #d9e0e8;
+      --surface: #ffffff;
+      --canvas: #f4f7fb;
+      --danger: #b42318;
+      --danger-soft: #fff2f0;
+      --success: #087a55;
+      --shadow: 0 18px 50px rgba(23, 43, 77, .10);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 12% 4%, rgba(47,111,237,.09), transparent 28rem),
+        var(--canvas);
+      color: var(--ink);
+      font: 15px/1.5 "Segoe UI", Inter, Arial, sans-serif;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button, select, input[type="checkbox"] { cursor: pointer; }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 32px auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 20px;
+    }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--navy);
+      font-size: clamp(25px, 4vw, 36px);
+      line-height: 1.15;
+      letter-spacing: -.025em;
+    }
+
+    .subhead { margin: 7px 0 0; color: var(--muted); }
+
+    .language-switch {
+      display: inline-flex;
+      flex: 0 0 auto;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.8);
+    }
+
+    .language-switch button {
+      min-width: 52px;
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .language-switch button[aria-pressed="true"] {
+      background: var(--navy);
+      color: white;
+      box-shadow: 0 3px 10px rgba(23,43,77,.18);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(340px, .92fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      border: 1px solid rgba(217,224,232,.9);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-body { padding: 26px; }
+
+    .topic-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 8px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .topic-tab {
+      padding: 11px 14px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 750;
+    }
+
+    .topic-tab[aria-selected="true"] {
+      border-color: var(--line);
+      background: white;
+      color: var(--navy);
+      box-shadow: 0 3px 10px rgba(23,43,77,.07);
+    }
+
+    .section-heading { margin-bottom: 22px; }
+    .section-heading h2 { margin: 0 0 4px; color: var(--navy); font-size: 20px; }
+    .section-heading p { margin: 0; color: var(--muted); }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 17px;
+    }
+
+    .field { min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+
+    label, .field-label {
+      display: block;
+      margin-bottom: 6px;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .optional { color: var(--muted); font-weight: 500; }
+
+    input[type="text"], input[type="date"], select, textarea {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid #cfd8e3;
+      border-radius: 10px;
+      outline: none;
+      background: white;
+      color: var(--ink);
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    textarea { min-height: 96px; resize: vertical; }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(47,111,237,.13);
+    }
+
+    [aria-invalid="true"] { border-color: var(--danger) !important; }
+
+    .checks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fbfcfe;
+      color: #344054;
+      font-weight: 600;
+    }
+
+    .check:has(input:checked) {
+      border-color: #9bbcff;
+      background: var(--blue-soft);
+      color: var(--navy);
+    }
+
+    .check input { width: 17px; height: 17px; accent-color: var(--blue); }
+
+    .folder-role[hidden], [hidden] { display: none !important; }
+
+    .validation {
+      margin: 18px 0 0;
+      padding: 11px 13px;
+      border: 1px solid #f2b8b5;
+      border-radius: 10px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-size: 13px;
+    }
+
+    .preview-card { position: sticky; top: 20px; }
+
+    .preview-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 21px 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .preview-head h2 { margin: 0; color: var(--navy); font-size: 18px; }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--success);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .live-badge::before {
+      width: 7px; height: 7px; border-radius: 50%; background: currentColor; content: "";
+    }
+
+    .preview-body { padding: 22px; }
+
+    #output {
+      min-height: 280px;
+      border-color: var(--line);
+      background: #fbfcfe;
+      line-height: 1.65;
+    }
+
+    #output:focus { border-color: var(--line); box-shadow: none; }
+
+    .empty-state {
+      min-height: 280px;
+      display: grid;
+      place-items: center;
+      padding: 30px;
+      border: 1px dashed #c9d3df;
+      border-radius: 10px;
+      background: #fbfcfe;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .actions { display: flex; gap: 10px; margin-top: 14px; }
+
+    .button {
+      min-height: 44px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--navy);
+      font-weight: 750;
+    }
+
+    .button.primary {
+      flex: 1;
+      border-color: var(--blue);
+      background: var(--blue);
+      color: white;
+    }
+
+    .button.primary:hover:not(:disabled) { background: var(--blue-dark); }
+    .button:hover:not(:disabled) { border-color: #aeb9c7; }
+    .button:disabled { cursor: not-allowed; opacity: .48; }
+
+    .copy-status {
+      min-height: 21px;
+      margin: 8px 0 -4px;
+      color: var(--success);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .privacy-note {
+      margin: 18px 4px 0;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 850px) {
+      .workspace { grid-template-columns: 1fr; }
+      .preview-card { position: static; }
+    }
+
+    @media (max-width: 580px) {
+      .shell { width: min(100% - 20px, 1180px); margin: 18px auto; }
+      .topbar { align-items: stretch; flex-direction: column; gap: 14px; }
+      .language-switch { align-self: flex-start; }
+      .card-body, .preview-body { padding: 20px; }
+      .form-grid, .checks { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      .actions { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" data-i18n="eyebrow">Offline service desk tool</p>
+        <h1 data-i18n="title">Message generator</h1>
+        <p class="subhead" data-i18n="subtitle">Create a clean, paste-ready ticket update in seconds.</p>
+      </div>
+      <div class="language-switch" aria-label="Language / Sprache">
+        <button type="button" data-language="en" aria-pressed="true">EN</button>
+        <button type="button" data-language="de" aria-pressed="false">DE</button>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <section class="card" aria-label="Message details">
+        <div class="topic-tabs" role="tablist" aria-label="Topic">
+          <button class="topic-tab" type="button" role="tab" data-topic="ooo" aria-selected="true" data-i18n="oooTab">Out of office</button>
+          <button class="topic-tab" type="button" role="tab" data-topic="delegation" aria-selected="false" data-i18n="delegationTab">Delegation</button>
+        </div>
+
+        <div class="card-body">
+          <form id="oooForm" novalidate>
+            <div class="section-heading">
+              <h2 data-i18n="oooHeading">Germany leaver reply</h2>
+              <p data-i18n="oooHelp">Choose the office and user type. The approved English reply is created automatically.</p>
+            </div>
+            <div class="form-grid">
+              <div class="field full">
+                <label for="oooMailbox" data-i18n="formerUser">Former employee name</label>
+                <input id="oooMailbox" type="text" autocomplete="off" data-placeholder="formerUserPlaceholder" placeholder="For example: Jane Smith">
+              </div>
+              <div class="field">
+                <label for="oooLocation" data-i18n="officeLocation">Office location</label>
+                <select id="oooLocation">
+                  <option value="" data-i18n="chooseOffice">Choose an office</option>
+                  <option value="munich">Munich</option>
+                  <option value="frankfurt">Frankfurt</option>
+                  <option value="hamburg">Hamburg</option>
+                  <option value="duesseldorf">Düsseldorf</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="oooUserType" data-i18n="userType">User type</label>
+                <select id="oooUserType">
+                  <option value="" data-i18n="chooseUserType">Choose a user type</option>
+                  <option value="standard" data-i18n="standard">Standard</option>
+                  <option value="partner" data-i18n="partnerOnly">Partner only</option>
+                </select>
+              </div>
+            </div>
+          </form>
+
+          <form id="delegationForm" hidden novalidate>
+            <div class="section-heading">
+              <h2 data-i18n="delegationHeading">Mailbox delegation</h2>
+              <p data-i18n="delegationHelp">Document mailbox or folder permissions in one clear message.</p>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="mailbox" data-i18n="mailbox">Mailbox</label>
+                <input id="mailbox" type="text" autocomplete="off" data-placeholder="sharedMailboxPlaceholder" placeholder="shared.mailbox@company.com">
+              </div>
+              <div class="field">
+                <label for="delegate" data-i18n="delegate">Delegate or user</label>
+                <input id="delegate" type="text" autocomplete="off" data-placeholder="delegatePlaceholder" placeholder="name@company.com or display name">
+              </div>
+              <div class="field">
+                <label for="delegationAction" data-i18n="action">Action</label>
+                <select id="delegationAction">
+                  <option value="grant" data-i18n="grant">Granted</option>
+                  <option value="remove" data-i18n="remove">Removed</option>
+                  <option value="update" data-i18n="update">Updated</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="delegationMethod" data-i18n="method">Completed via</label>
+                <select id="delegationMethod">
+                  <option value="exchange">Exchange admin center</option>
+                  <option value="symprex">Symprex</option>
+                </select>
+              </div>
+              <div class="field full">
+                <span class="field-label" data-i18n="permissions">Permissions</span>
+                <div class="checks">
+                  <label class="check"><input id="fullAccess" type="checkbox" value="fullAccess"><span data-i18n="fullAccess">Full Access</span></label>
+                  <label class="check"><input id="sendAs" type="checkbox" value="sendAs"><span data-i18n="sendAs">Send As</span></label>
+                  <label class="check"><input id="sendOnBehalf" type="checkbox" value="sendOnBehalf"><span data-i18n="sendOnBehalf">Send on Behalf</span></label>
+                  <label class="check"><input id="inbox" type="checkbox" value="inbox"><span data-i18n="inbox">Inbox access</span></label>
+                  <label class="check"><input id="calendar" type="checkbox" value="calendar"><span data-i18n="calendar">Calendar access</span></label>
+                </div>
+              </div>
+              <div class="field full folder-role" id="folderRoleField" hidden>
+                <label for="folderRole" data-i18n="accessLevel">Folder access level</label>
+                <select id="folderRole">
+                  <option value="reviewer" data-i18n="reviewer">Reviewer</option>
+                  <option value="editor" data-i18n="editor">Editor</option>
+                  <option value="publishingEditor" data-i18n="publishingEditor">Publishing Editor</option>
+                  <option value="owner" data-i18n="owner">Owner</option>
+                </select>
+              </div>
+              <div class="field full">
+                <label for="delegationNote"><span data-i18n="closingNote">Additional sentence</span> <span class="optional" data-i18n="optional">(optional)</span></label>
+                <input id="delegationNote" type="text" autocomplete="off" data-placeholder="notePlaceholder" placeholder="For example: The user was informed.">
+              </div>
+            </div>
+          </form>
+
+          <div id="validation" class="validation" role="alert" hidden></div>
+        </div>
+      </section>
+
+      <aside class="card preview-card">
+        <div class="preview-head">
+          <h2 data-i18n="preview">Message preview</h2>
+          <span class="live-badge" data-i18n="live">Live</span>
+        </div>
+        <div class="preview-body">
+          <div id="emptyState" class="empty-state" data-i18n="emptyState">Complete the required fields to create the message.</div>
+          <textarea id="output" readonly aria-label="Generated message" hidden></textarea>
+          <div class="actions">
+            <button id="copyButton" class="button primary" type="button" disabled data-i18n="copy">Copy message</button>
+            <button id="clearButton" class="button" type="button" data-i18n="clear">Clear</button>
+          </div>
+          <p id="copyStatus" class="copy-status" aria-live="polite"></p>
+        </div>
+      </aside>
+    </div>
+    <p class="privacy-note" data-i18n="privacy">Works entirely in this file. Nothing is uploaded or saved.</p>
+  </main>
+
+  <script>
+    // Edit wording in this section to match your Service Desk style.
+    const translations = {
+      en: {
+        eyebrow: "Offline service desk tool", title: "Message generator",
+        subtitle: "Create a clean, paste-ready ticket update in seconds.",
+        oooTab: "Out of office", delegationTab: "Delegation",
+        oooHeading: "Germany leaver reply", oooHelp: "Choose the office and user type. The approved English reply is created automatically.",
+        delegationHeading: "Mailbox delegation", delegationHelp: "Document mailbox or folder permissions in one clear message.",
+        formerUser: "Former employee name", officeLocation: "Office location", userType: "User type",
+        chooseOffice: "Choose an office", chooseUserType: "Choose a user type", standard: "Standard", partnerOnly: "Partner only",
+        mailbox: "Mailbox", delegate: "Delegate or user",
+        action: "Action", method: "Completed via", optional: "(optional)", closingNote: "Additional sentence", update: "Updated",
+        grant: "Granted", remove: "Removed", permissions: "Permissions",
+        fullAccess: "Full Access", sendAs: "Send As", sendOnBehalf: "Send on Behalf",
+        inbox: "Inbox access", calendar: "Calendar access", accessLevel: "Folder access level",
+        reviewer: "Reviewer", editor: "Editor", publishingEditor: "Publishing Editor", owner: "Owner",
+        preview: "Message preview", live: "Live", copy: "Copy message", clear: "Clear",
+        emptyState: "Complete the required fields to create the message.", copied: "Message copied.",
+        privacy: "Works entirely in this file. Nothing is uploaded or saved.",
+        formerUserPlaceholder: "For example: Jane Smith", sharedMailboxPlaceholder: "shared.mailbox@company.com",
+        delegatePlaceholder: "name@company.com or display name",
+        notePlaceholder: "For example: The user was informed.",
+        requiredFormerUser: "Enter the former employee's name.", requiredOffice: "Choose an office location.", requiredUserType: "Choose Standard or Partner only.",
+        requiredMailbox: "Enter the mailbox or user.", requiredDelegate: "Enter the delegate or user.",
+        requiredPermission: "Select at least one permission."
+      },
+      de: {
+        eyebrow: "Offline-Tool für den Service Desk", title: "Nachrichtengenerator",
+        subtitle: "Erstelle in wenigen Sekunden eine fertige Ticket-Nachricht.",
+        oooTab: "Abwesenheit", delegationTab: "Delegierung",
+        oooHeading: "Abwesenheitsnachricht für deutsche Standorte", oooHelp: "Wähle Standort und Benutzertyp. Die freigegebene englische Nachricht wird automatisch erstellt.",
+        delegationHeading: "Postfachdelegierung", delegationHelp: "Dokumentiere Postfach- oder Ordnerberechtigungen in einer klaren Nachricht.",
+        formerUser: "Name der ausgeschiedenen Person", officeLocation: "Standort", userType: "Benutzertyp",
+        chooseOffice: "Standort auswählen", chooseUserType: "Benutzertyp auswählen", standard: "Standard", partnerOnly: "Nur Partner",
+        mailbox: "Postfach", delegate: "Berechtigter Benutzer",
+        action: "Aktion", method: "Durchgeführt über", optional: "(optional)", closingNote: "Zusätzlicher Satz", update: "Aktualisiert",
+        grant: "Erteilt", remove: "Entfernt", permissions: "Berechtigungen",
+        fullAccess: "Vollzugriff", sendAs: "Senden als", sendOnBehalf: "Senden im Auftrag von",
+        inbox: "Zugriff auf Posteingang", calendar: "Zugriff auf Kalender", accessLevel: "Ordnerberechtigungsstufe",
+        reviewer: "Prüfer", editor: "Bearbeiter", publishingEditor: "Veröffentlichender Bearbeiter", owner: "Besitzer",
+        preview: "Nachrichtenvorschau", live: "Live", copy: "Nachricht kopieren", clear: "Leeren",
+        emptyState: "Fülle die Pflichtfelder aus, um die Nachricht zu erstellen.", copied: "Nachricht kopiert.",
+        privacy: "Funktioniert vollständig in dieser Datei. Es wird nichts hochgeladen oder gespeichert.",
+        formerUserPlaceholder: "Zum Beispiel: Jane Smith", sharedMailboxPlaceholder: "sammelpostfach@firma.de",
+        delegatePlaceholder: "name@firma.de oder Anzeigename",
+        notePlaceholder: "Zum Beispiel: Der Benutzer wurde informiert.",
+        requiredFormerUser: "Gib den Namen der ausgeschiedenen Person ein.", requiredOffice: "Wähle einen Standort aus.", requiredUserType: "Wähle Standard oder Nur Partner aus.",
+        requiredMailbox: "Gib das Postfach oder den Benutzer ein.", requiredDelegate: "Gib den berechtigten Benutzer ein.",
+        requiredPermission: "Wähle mindestens eine Berechtigung aus."
+      }
+    };
+
+    const state = { language: "en", topic: "ooo" };
+    const $ = (id) => document.getElementById(id);
+    const value = (id) => $(id).value.trim();
+
+    function joinNatural(items) {
+      if (items.length < 2) return items[0] || "";
+      const conjunction = state.language === "de" ? " und " : " and ";
+      if (items.length === 2) return items.join(conjunction);
+      return items.slice(0, -1).join(", ") + conjunction + items.at(-1);
+    }
+
+    function ensurePeriod(text) {
+      const clean = text.trim();
+      if (!clean) return "";
+      return /[.!?]$/.test(clean) ? clean : clean + ".";
+    }
+
+    function methodName(method) {
+      if (method === "symprex") return "Symprex";
+      if (method === "outlook") return "Outlook";
+      return state.language === "de" ? "Exchange Admin Center" : "Exchange admin center";
+    }
+
+    function validateOOO(showErrors) {
+      const t = translations[state.language];
+      const errors = [];
+      const formerUser = value("oooMailbox");
+      const office = $("oooLocation").value;
+      const userType = $("oooUserType").value;
+      if (!formerUser) errors.push(t.requiredFormerUser);
+      if (!office) errors.push(t.requiredOffice);
+      if (!userType) errors.push(t.requiredUserType);
+      $("oooMailbox").setAttribute("aria-invalid", String(showErrors && !formerUser));
+      $("oooLocation").setAttribute("aria-invalid", String(showErrors && !office));
+      $("oooUserType").setAttribute("aria-invalid", String(showErrors && !userType));
+      return errors;
+    }
+
+    function validateDelegation(showErrors) {
+      const t = translations[state.language];
+      const errors = [];
+      const mailbox = value("mailbox");
+      const delegate = value("delegate");
+      const hasPermission = ["fullAccess", "sendAs", "sendOnBehalf", "inbox", "calendar"].some(id => $(id).checked);
+      if (!mailbox) errors.push(t.requiredMailbox);
+      if (!delegate) errors.push(t.requiredDelegate);
+      if (!hasPermission) errors.push(t.requiredPermission);
+      $("mailbox").setAttribute("aria-invalid", String(showErrors && !mailbox));
+      $("delegate").setAttribute("aria-invalid", String(showErrors && !delegate));
+      return errors;
+    }
+
+    function generateOOO() {
+      const formerUser = value("oooMailbox");
+      const userType = $("oooUserType").value;
+      const phoneNumbers = {
+        munich: "+49892370860",
+        frankfurt: "+49692972910",
+        hamburg: "+49408000840",
+        duesseldorf: "+492115409700"
+      };
+      const phone = phoneNumbers[$("oooLocation").value];
+      const employmentText = userType === "partner"
+        ? "is no longer a partner of, or working with, Watson Farley & Williams."
+        : "is no longer working with Watson Farley & Williams.";
+
+      return `Thank you for your Email. ${formerUser} ${employmentText}\nPlease contact ${phone} who will be pleased to assist you with any queries.`;
+    }
+
+    function generateDelegation() {
+      const mailbox = value("mailbox");
+      const delegate = value("delegate");
+      const action = $("delegationAction").value;
+      const method = methodName($("delegationMethod").value);
+      const role = translations[state.language][$("folderRole").value];
+      const note = ensurePeriod(value("delegationNote"));
+      const permissions = [];
+      if ($("fullAccess").checked) permissions.push(state.language === "de" ? "Vollzugriff" : "Full Access");
+      if ($("sendAs").checked) permissions.push(state.language === "de" ? "Senden als" : "Send As");
+      if ($("sendOnBehalf").checked) permissions.push(state.language === "de" ? "Senden im Auftrag von" : "Send on Behalf");
+      if ($("inbox").checked) permissions.push(state.language === "de" ? `Zugriff auf den Posteingang (${role})` : `Inbox access (${role})`);
+      if ($("calendar").checked) permissions.push(state.language === "de" ? `Zugriff auf den Kalender (${role})` : `Calendar access (${role})`);
+      const list = joinNatural(permissions);
+      let text;
+
+      if (state.language === "de") {
+        if (action === "grant") text = `${delegate} wurden für das Postfach ${mailbox} folgende Berechtigungen erteilt: ${list}.`;
+        if (action === "remove") text = `Für ${delegate} wurden folgende Berechtigungen aus dem Postfach ${mailbox} entfernt: ${list}.`;
+        if (action === "update") text = `Die folgenden Berechtigungen von ${delegate} für das Postfach ${mailbox} wurden aktualisiert: ${list}.`;
+        text += ` Die Änderung wurde über ${method} vorgenommen.`;
+      } else {
+        if (action === "grant") text = `${delegate} was granted the following permissions for the mailbox ${mailbox}: ${list}.`;
+        if (action === "remove") text = `The following permissions were removed from ${delegate} for the mailbox ${mailbox}: ${list}.`;
+        if (action === "update") text = `The following permissions for ${delegate} on the mailbox ${mailbox} were updated: ${list}.`;
+        text += ` The change was completed via ${method}.`;
+      }
+      if (note) text += `\n\n${note}`;
+      return text;
+    }
+
+    function updatePreview(showErrors = false) {
+      const errors = state.topic === "ooo" ? validateOOO(showErrors) : validateDelegation(showErrors);
+      const validation = $("validation");
+      validation.textContent = errors.join(" ");
+      validation.hidden = !showErrors || errors.length === 0;
+
+      const valid = errors.length === 0;
+      $("output").value = valid ? (state.topic === "ooo" ? generateOOO() : generateDelegation()) : "";
+      $("output").hidden = !valid;
+      $("emptyState").hidden = valid;
+      $("copyButton").disabled = !valid;
+      $("copyStatus").textContent = "";
+    }
+
+    function updateConditionalFields() {
+      const folderSelected = $("inbox").checked || $("calendar").checked;
+      $("folderRoleField").hidden = !folderSelected;
+    }
+
+    function setLanguage(language) {
+      state.language = language;
+      document.documentElement.lang = language;
+      document.querySelectorAll("[data-language]").forEach(button => {
+        button.setAttribute("aria-pressed", String(button.dataset.language === language));
+      });
+      document.querySelectorAll("[data-i18n]").forEach(element => {
+        element.textContent = translations[language][element.dataset.i18n];
+      });
+      document.querySelectorAll("[data-placeholder]").forEach(element => {
+        element.placeholder = translations[language][element.dataset.placeholder];
+      });
+      updatePreview(false);
+    }
+
+    function setTopic(topic) {
+      state.topic = topic;
+      $("oooForm").hidden = topic !== "ooo";
+      $("delegationForm").hidden = topic !== "delegation";
+      document.querySelectorAll("[data-topic]").forEach(button => {
+        button.setAttribute("aria-selected", String(button.dataset.topic === topic));
+      });
+      $("validation").hidden = true;
+      updatePreview(false);
+    }
+
+    function clearCurrentForm() {
+      $(state.topic === "ooo" ? "oooForm" : "delegationForm").reset();
+      updateConditionalFields();
+      updatePreview(false);
+    }
+
+    async function copyMessage() {
+      updatePreview(true);
+      if (!$("output").value) return;
+      try {
+        await navigator.clipboard.writeText($("output").value);
+      } catch (_) {
+        $("output").hidden = false;
+        $("output").select();
+        document.execCommand("copy");
+        window.getSelection()?.removeAllRanges();
+      }
+      $("copyStatus").textContent = translations[state.language].copied;
+      setTimeout(() => { $("copyStatus").textContent = ""; }, 1800);
+    }
+
+    document.querySelectorAll("[data-language]").forEach(button => button.addEventListener("click", () => setLanguage(button.dataset.language)));
+    document.querySelectorAll("[data-topic]").forEach(button => button.addEventListener("click", () => setTopic(button.dataset.topic)));
+    document.querySelectorAll("input, select, textarea").forEach(control => {
+      if (control.id !== "output") control.addEventListener("input", () => {
+        updateConditionalFields();
+        updatePreview(false);
+      });
+    });
+    document.querySelectorAll("input[type='text'], input[type='date'], select").forEach(control => {
+      control.addEventListener("blur", () => updatePreview(true));
+    });
+    $("copyButton").addEventListener("click", copyMessage);
+    $("clearButton").addEventListener("click", clearCurrentForm);
+    updateConditionalFields();
+    setLanguage("en");
+  </script>
+</body>
+</html>
